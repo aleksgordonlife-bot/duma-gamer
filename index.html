@@ -6,6 +6,7 @@
     <title>Государственная Дума РФ | Политический симулятор</title>
     <meta name="theme-color" content="#d4af37">
     <style>
+        /* Стили остаются теми же, что и в предыдущей версии */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, 'Segoe UI', 'Roboto', 'Arial', sans-serif; background: linear-gradient(135deg, #0a1a2a 0%, #0a2a3a 100%); color: #eef; min-height: 100vh; overflow-x: hidden; }
         body.crisis-effect { background: linear-gradient(135deg, #3a1a1a 0%, #4a2a2a 100%); box-shadow: inset 0 0 100px rgba(255,0,0,0.3); }
@@ -24,11 +25,13 @@
         .stat.economy { background: rgba(42,138,90,0.3); }
         @keyframes pulseWarning { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
         .election-timer { background: #d4af37; color: #0a1a2a; font-weight: bold; padding: 3px 8px; border-radius: 20px; font-size: clamp(9px, 3vw, 11px); font-family: monospace; }
+        .online-players { background: rgba(42,138,90,0.3); padding: 3px 8px; border-radius: 20px; font-size: clamp(9px, 3vw, 11px); display: flex; align-items: center; gap: 4px; }
+        .online-dot { width: 8px; height: 8px; background: #2a8a5a; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
         
         .main-container { display: flex; padding: 8px; gap: 8px; max-width: 1400px; margin: 0 auto; }
         @media (max-width: 768px) { .main-container { flex-direction: column; padding: 6px; gap: 6px; } .diagonal-row { margin-left: 0 !important; } }
         
-        .duma-map-panel { flex: 2; background: rgba(0,0,0,0.5); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
+        .duma-map-panel { flex: 2; background: rgba(0,0,0,0.5); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; overflow-x: hidden; }
         .hall-title h3 { font-size: clamp(12px, 4vw, 14px); text-align: center; margin-bottom: 4px; }
         .hall-title p { font-size: clamp(8px, 2.5vw, 10px); color: #aaa; text-align: center; }
         .diagonal-parliament { background: linear-gradient(145deg,#2a3a4a,#1a2a3a); border-radius: 12px; padding: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); overflow-x: auto; }
@@ -40,8 +43,8 @@
         .seat:hover { transform: scale(1.1); }
         .seat-legend { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px; font-size: clamp(8px, 2.5vw, 10px); padding: 5px; background: rgba(0,0,0,0.3); border-radius: 20px; }
         
-        .tabs { display: flex; gap: 3px; margin-top: 10px; border-bottom: 1px solid #2a4a6a; }
-        .tab-btn { background: rgba(0,0,0,0.5); border: none; padding: 5px 12px; color: #eef; cursor: pointer; border-radius: 8px 8px 0 0; font-size: clamp(10px, 3.5vw, 12px); flex: 1; text-align: center; transition: all 0.2s ease; }
+        .tabs { display: flex; gap: 3px; margin-top: 10px; border-bottom: 1px solid #2a4a6a; flex-wrap: wrap; }
+        .tab-btn { background: rgba(0,0,0,0.5); border: none; padding: 5px 12px; color: #eef; cursor: pointer; border-radius: 8px 8px 0 0; font-size: clamp(10px, 3.5vw, 12px); flex: 1; text-align: center; transition: all 0.2s ease; min-width: 60px; }
         .tab-btn.active { background: #d4af37; color: #0a1a2a; font-weight: bold; }
         .tab-content { display: none; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 0 0 10px 10px; max-height: 280px; overflow-y: auto; }
         .tab-content.active { display: block; }
@@ -75,14 +78,6 @@
         .modal-content { background: linear-gradient(135deg,#1a2a3a,#0a1a2a); padding: 15px; border-radius: 15px; max-width: 500px; width: 95%; border: 2px solid #d4af37; max-height: 90vh; overflow-y: auto; }
         
         input, textarea, select { width: 100%; padding: 8px; margin: 5px 0; background: #0a1a2a; border: 1px solid #2a4a6a; color: white; border-radius: 8px; font-size: clamp(11px, 4vw, 13px); }
-        
-        .chat-panel { background: rgba(0,0,0,0.5); border-radius: 10px; padding: 8px; min-height: 260px; display: flex; flex-direction: column; }
-        .chat-messages { flex: 1; overflow-y: auto; font-size: clamp(10px, 3.5vw, 11px); max-height: 300px; min-height: 220px; }
-        .chat-message { padding: 5px; border-bottom: 1px solid #2a4a6a; word-break: break-word; animation: fadeIn 0.15s ease; }
-        .chat-message strong { color: #d4af37; }
-        .chat-message small { font-size: 8px; color: #888; }
-        .chat-input-area { display: flex; gap: 5px; margin-top: 6px; align-items: center; }
-        .chat-input-area input { flex: 1; padding: 8px; font-size: clamp(11px, 4vw, 12px); margin: 0; }
         
         .law-history-item { padding: 6px; margin: 4px 0; border-radius: 6px; font-size: 11px; }
         .law-passed { background: rgba(42,138,90,0.2); border-left: 3px solid #2a8a5a; }
@@ -125,12 +120,30 @@
         
         .event-notification { position: fixed; top: 80px; right: 20px; background: linear-gradient(135deg, #8b3a3a, #6a2a2a); color: white; padding: 12px 20px; border-radius: 10px; animation: slideIn 0.5s ease, fadeOut 0.5s ease 4s forwards; z-index: 2000; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
         .achievement-notification { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a1a2a; padding: 12px 20px; border-radius: 10px; animation: slideIn 0.5s ease, fadeOut 0.5s ease 3s forwards; z-index: 2000; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .sending-indicator { display: inline-block; width: 16px; height: 16px; border: 2px solid #d4af37; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; margin-left: 8px; }
         
         .event-list { max-height: 200px; overflow-y: auto; }
-        .event-item { padding: 5px; margin: 3px 0; border-left: 3px solid #d4af37; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 11px; }
+        .event-item { padding: 5px; margin: 3px 0; border-left: 3px solid #d4af37; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 11px; word-break: break-word; }
         .ruling-warning { background: linear-gradient(135deg, #d4af37, #b8941f); color: #0a1a2a; padding: 5px 10px; border-radius: 5px; font-weight: bold; margin: 5px 0; text-align: center; animation: pulse 1s infinite; }
         .crisis-warning { background: linear-gradient(135deg, #8b3a3a, #6a2a2a); color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; margin: 5px 0; text-align: center; animation: pulseWarning 1s infinite; }
+        
+        .achievements-list { max-height: 200px; overflow-y: auto; }
+        .achievement-item { padding: 8px; margin: 5px 0; background: rgba(0,0,0,0.3); border-radius: 8px; border-left: 3px solid #d4af37; word-break: break-word; }
+        .achievement-locked { opacity: 0.5; filter: grayscale(0.3); }
+        .achievement-unlocked { background: rgba(42,138,90,0.2); border-left-color: #2a8a5a; }
+        
+        @media (max-width: 768px) {
+            .achievements-list { max-height: 250px; }
+            .achievement-item { padding: 6px; font-size: 11px; }
+            .event-list { max-height: 250px; }
+            .event-item { padding: 4px; font-size: 10px; }
+            .tab-btn { padding: 4px 8px; font-size: 10px; }
+            .online-players { font-size: 8px; padding: 2px 6px; }
+        }
+        
+        .new-event { animation: newEvent 0.5s ease-out; }
+        @keyframes newEvent { 0% { background: rgba(212,175,55,0.4); } 100% { background: transparent; } }
+        
+        .proposal-btn { margin-top: 5px; font-size: 10px; width: 100%; }
     </style>
 </head>
 <body>
@@ -151,6 +164,7 @@
                 <div class="stat economy">📊 <span id="economyHealth">70</span>%</div>
                 <div class="stat" id="crisisStat">⚠️ <span id="crisisLevel">0</span>%</div>
                 <div class="election-timer" id="electionTimer">⏰ 10:00</div>
+                <div class="online-players"><span class="online-dot"></span> <span id="onlineCount">0</span> онлайн</div>
                 <div class="sync-status" id="syncStatus">🔄 Синхр.</div>
             </div>
         </div>
@@ -166,15 +180,18 @@
                     <button class="tab-btn" data-tab="laws">📜 ЗАКОНЫ</button>
                     <button class="tab-btn" data-tab="history">📋 ИСТОРИЯ</button>
                     <button class="tab-btn" data-tab="events">⚡ СОБЫТИЯ</button>
+                    <button class="tab-btn" data-tab="achievements">🏆 ДОСТИЖЕНИЯ</button>
                 </div>
                 <div id="newsTab" class="tab-content active"><div id="newsFeed" style="max-height:180px;overflow-y:auto;"></div></div>
                 <div id="lawsTab" class="tab-content"><div id="lawsList" style="max-height:180px;overflow-y:auto;"></div></div>
                 <div id="historyTab" class="tab-content"><div id="lawsHistory" style="max-height:180px;overflow-y:auto;"></div></div>
                 <div id="eventsTab" class="tab-content"><div id="eventsList" style="max-height:180px;overflow-y:auto;"></div></div>
+                <div id="achievementsTab" class="tab-content"><div id="achievementsList" class="achievements-list"></div></div>
             </div>
             <div class="sidebar-panel">
                 <div id="electionAlert"></div>
                 <div id="createPartyButton" class="create-btn">➕ СОЗДАТЬ ПАРТИЮ</div>
+                <div id="leavePartyButton" class="create-btn" style="display:none; background: linear-gradient(135deg,#8b3a3a,#6a2a2a);">🚪 ПОКИНУТЬ ПАРТИЮ</div>
                 <h3>📊 ФРАКЦИИ</h3>
                 <div id="factionsGrid" class="faction-grid"></div>
                 <h3>⚡ ДЕЯТЕЛЬНОСТЬ</h3>
@@ -193,15 +210,6 @@
                     <div id="reformCooldownMsg" class="reform-cooldown-timer" style="display:none;"></div>
                     <p style="font-size: 9px; margin-top: 3px; color: #aaa;">Реформы доступны только правящей партии (перезарядка 30 сек)</p>
                 </div>
-                <div class="chat-panel">
-                    <h3>💬 ОБЩИЙ ЧАТ</h3>
-                    <div id="chatMessages" class="chat-messages"></div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chatInput" placeholder="Сообщение..." maxlength="200">
-                        <button class="btn btn-primary" id="sendChatBtn">📨</button>
-                        <div id="sendingIndicator" style="display: none;" class="sending-indicator"></div>
-                    </div>
-                </div>
             </div>
         </div>
         <footer><p>🏛️ Выборы каждые 10 минут | При 0% рейтинга партия распадается | Кризис снижает рейтинг правящей партии</p></footer>
@@ -216,9 +224,8 @@
 
     <script>
         // ========== КОНФИГУРАЦИЯ ==========
-        const BIN_ID = '69cbfc63856a682189e7f8f8';
-        const CHAT_BIN_ID = '69cdc5fd856a682189efd2b6';
-        const API_KEY = '$2a$10$yUiv2dIsxCF1xLrQqy/T3Og78N8aFFmE13RTOZWT6zQ4KNOI8SVAK';
+        const BIN_ID = '69d1b20e36566621a87d68ff';
+        const API_KEY = '$2a$10$jozgBDU92mC8tIBpqz/IqeDpZApdtvwsILKGKukUcoebgYgBhkhsm';
         
         const TOTAL_SEATS = 450;
         const ELECTION_INTERVAL = 10 * 60 * 1000;
@@ -226,6 +233,16 @@
         const MAX_ACTIVE_PROPOSALS = 3;
         const CRISIS_RATING_DAMAGE = 2;
         const CRISIS_DAMAGE_INTERVAL = 10000;
+        const SYNC_INTERVAL = 15000;
+        
+        // Константа для начальных ботов (защита от исчезновения)
+        const INITIAL_BOT_FACTIONS = [
+            { id: 1, name: "Единая Россия", color: "#3366cc", ideology: "Консерватизм", seats: 314, rating: 42, isBot: true, votedOnLaw: null, money: 50000, isDead: false },
+            { id: 2, name: "КПРФ", color: "#cc3333", ideology: "Социализм", seats: 56, rating: 20, isBot: true, votedOnLaw: null, money: 30000, isDead: false },
+            { id: 3, name: "Справедливая Россия", color: "#33cc66", ideology: "Социал-демократия", seats: 28, rating: 16, isBot: true, votedOnLaw: null, money: 25000, isDead: false },
+            { id: 4, name: "ЛДПР", color: "#33cc33", ideology: "Национализм", seats: 22, rating: 14, isBot: true, votedOnLaw: null, money: 22000, isDead: false },
+            { id: 5, name: "Новые люди", color: "#ffaa44", ideology: "Либерализм", seats: 15, rating: 12, isBot: true, votedOnLaw: null, money: 18000, isDead: false }
+        ];
         
         let currentPlayer = null;
         let factions = [];
@@ -253,8 +270,8 @@
         let isOnline = true;
         let lastRulingWarning = null;
         let lastCrisisWarning = null;
-        let lastChatSend = 0;
         let crisisDamageInterval = null;
+        let lastSyncTime = 0;
         
         let gameInterval = null;
         let electionTimerInterval = null;
@@ -264,10 +281,91 @@
         let autoSaveInterval = null;
         
         let votingLock = false;
-        let lawFinalizing = new Set();
         let isInitialized = false;
         
-        const cities = ["Москва","Санкт-Петербург","Новосибирск","Екатеринбург","Казань","Нижний Новгород","Челябинск","Самара","Омск","Ростов-на-Дону","Уфа","Красноярск","Пермь","Воронеж","Волгоград","Краснодар","Саратов","Тюмень","Ижевск","Барнаул","Иркутск","Владивосток","Ярославль","Кемерово","Томск"];
+        const cities = ["Москва","Санкт-Петербург","Новосибирск","Екатеринбург","Казань","Нижний Новгород","Челябинск","Самара","Омск","Ростов-на-Дону","Уфа","Красноярск","Пермь","Воронеж","Волгоград","Краснодар","Саратов","Тюмень","Ижевск","Барнаул","Иркутск","Владивосток","Ярославль","Кемерово","Томск","Симферополь","Бобров","Севастополь"];
+        
+        // ========== ДОСТИЖЕНИЯ ==========
+        const ACHIEVEMENTS = {
+            'first_law': { name: '🏛️ Первый закон', desc: 'Принять первый закон', check: () => lawsHistory.filter(l => l.author === currentPlayer?.name && l.status === 'passed').length >= 1 },
+            'majority': { name: '👑 Парламентское большинство', desc: 'Получить 226+ мест', check: () => currentPlayer && factions.find(f => f.id === currentPlayer.party_id)?.seats >= 226 },
+            'rich': { name: '💰 Богатая партия', desc: 'Накопить 100000₽', check: () => currentPlayer && currentPlayer.money >= 100000 },
+            'crisis_manager': { name: '📉 Антикризисный', desc: 'Снизить кризис до 10%', check: () => crisisLevel <= 10 },
+            'lawmaker': { name: '📜 Законодатель', desc: 'Принять 10 законов', check: () => lawsHistory.filter(l => l.author === currentPlayer?.name && l.status === 'passed').length >= 10 },
+            'election_winner': { name: '🏆 Победитель', desc: 'Выиграть выборы', check: () => currentPlayer && factions.find(f => f.id === currentPlayer.party_id)?.id === rulingPartyId }
+        };
+        
+        // ========== ПОДСЧЁТ ОНЛАЙН ИГРОКОВ ==========
+        function updateOnlinePlayers() {
+            const players = factions.filter(f => !f.isBot && !f.isDead).length;
+            const onlineSpan = document.getElementById('onlineCount');
+            if (onlineSpan) onlineSpan.innerText = players;
+        }
+        
+        // ========== ВОССТАНОВЛЕНИЕ БОТОВ ==========
+        function ensureBotsExist() {
+            // Проверяем, что все начальные боты присутствуют в factions
+            for (let botTemplate of INITIAL_BOT_FACTIONS) {
+                const existingBot = factions.find(f => f.id === botTemplate.id && f.isBot === true);
+                if (!existingBot) {
+                    // Бот отсутствует - восстанавливаем
+                    factions.push({ ...botTemplate });
+                    console.log(`Восстановлен бот: ${botTemplate.name}`);
+                } else if (existingBot.isDead) {
+                    // Бот мёртв - воскрешаем
+                    existingBot.isDead = false;
+                    existingBot.seats = botTemplate.seats;
+                    existingBot.rating = botTemplate.rating;
+                    existingBot.money = botTemplate.money;
+                    console.log(`Воскрешён бот: ${botTemplate.name}`);
+                }
+            }
+            
+            // Сортируем фракции: сначала боты по ID, потом игроки
+            factions.sort((a, b) => {
+                if (a.isBot && !b.isBot) return -1;
+                if (!a.isBot && b.isBot) return 1;
+                return a.id - b.id;
+            });
+        }
+        
+        function renderAchievements() {
+            const container = document.getElementById('achievementsList');
+            if (!container) return;
+            container.innerHTML = Object.entries(ACHIEVEMENTS).map(([id, ach]) => {
+                const unlocked = achievements.includes(id);
+                return `<div class="achievement-item ${unlocked ? 'achievement-unlocked' : 'achievement-locked'}">
+                    <strong>${ach.name}</strong><br>
+                    <small>${ach.desc}</small>
+                    ${unlocked ? '<span style="color:#2a8a5a;"> ✅ Разблокировано</span>' : '<span style="color:#888;"> ❌ Не разблокировано</span>'}
+                </div>`;
+            }).join('');
+        }
+        
+        function checkAchievements() {
+            if (!currentPlayer) return;
+            let changed = false;
+            for (let [id, ach] of Object.entries(ACHIEVEMENTS)) {
+                if (!achievements.includes(id) && ach.check()) {
+                    achievements.push(id);
+                    changed = true;
+                    addNewsLocal(`🏆 ДОСТИЖЕНИЕ: ${ach.name} - ${ach.desc}`);
+                    showAchievementNotification(ach.name, ach.desc);
+                }
+            }
+            if (changed) {
+                renderAchievements();
+                saveToServer();
+            }
+        }
+        
+        function showAchievementNotification(name, desc) {
+            const notification = document.createElement('div');
+            notification.className = 'achievement-notification';
+            notification.innerHTML = `<strong>🏆 ${name}</strong><br><small>${desc}</small>`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3500);
+        }
         
         // ========== СЛУЧАЙНЫЕ СОБЫТИЯ ==========
         const RANDOM_EVENTS = [
@@ -300,7 +398,7 @@
         
         async function triggerRandomEvent() {
             if (electionActive || !gameRunning) return;
-            if (Math.random() < 0.15) {
+            if (Math.random() < 0.25) {
                 const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
                 event.effect();
                 await addNews(`⚡ СОБЫТИЕ: ${event.message}`);
@@ -316,27 +414,43 @@
             }
         }
         
-        // ========== ЛОКАЛЬНЫЕ НОВОСТИ ==========
+        // ========== НОВОСТИ ==========
         function addNewsLocal(msg) {
             news.unshift({ id: Date.now(), message: msg, date: new Date().toLocaleTimeString() });
             if (news.length > 50) news.pop();
             updateNews();
         }
         
+        async function addNews(msg) { 
+            addNewsLocal(msg);
+            await saveToServer(); 
+        }
+        
+        function updateNews() { 
+            let feed = document.getElementById('newsFeed'); 
+            if (feed) feed.innerHTML = news.slice(0, 20).map(n => `<div class="news-item"><div>📰 ${escapeHtml(n.message)}</div><div style="font-size:8px;color:#d4af37;">${n.date}</div></div>`).join(''); 
+        }
+        
         // ========== ПРОВЕРКА КРИЗИСА ==========
         function checkCrisisAndDamage() {
             const crisisAlert = document.getElementById('crisisAlert');
             
-            if (crisisLevel > 60) {
+            if (crisisLevel > 80) {
+                crisisAlert.style.display = 'block';
+                crisisAlert.innerHTML = '💀 КРИТИЧЕСКИЙ УРОВЕНЬ КРИЗИСА! Страна на грани collapse! 💀';
+                crisisAlert.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+            } else if (crisisLevel > 60) {
                 if (lastCrisisWarning !== 'high') {
                     crisisAlert.style.display = 'block';
                     crisisAlert.innerHTML = '⚠️ КРИТИЧЕСКИЙ УРОВЕНЬ КРИЗИСА! Рейтинг правящей партии падает! ⚠️';
+                    crisisAlert.style.background = 'linear-gradient(135deg, #8b3a3a, #6a2a2a)';
                     lastCrisisWarning = 'high';
                     setTimeout(() => { if (lastCrisisWarning === 'high') crisisAlert.style.display = 'none'; }, 5000);
                 }
             } else if (crisisLevel > 30 && lastCrisisWarning === 'high') {
                 crisisAlert.style.display = 'block';
                 crisisAlert.innerHTML = '📉 Уровень кризиса снижается, ситуация стабилизируется. 📈';
+                crisisAlert.style.background = 'linear-gradient(135deg, #ffaa44, #cc8844)';
                 lastCrisisWarning = 'medium';
                 setTimeout(() => { if (lastCrisisWarning === 'medium') crisisAlert.style.display = 'none'; }, 3000);
             } else if (crisisLevel <= 30 && crisisAlert.style.display === 'block') {
@@ -379,17 +493,22 @@
                         currentPlayer = null;
                         localStorage.removeItem('duma_player_id');
                         showPartyDeadModal(f.name);
+                        updateUI();
                     }
                 }
             }
             
             if (deadFactions.length > 0) {
-                factions = factions.filter(f => !f.isDead);
+                // Не удаляем мёртвые партии, просто помечаем их как dead
+                // Боты не удаляются, а только помечаются
                 generateColors();
                 renderMap();
                 updateUI();
                 await saveToServer();
             }
+            
+            // Восстанавливаем ботов, если их случайно удалили
+            ensureBotsExist();
         }
         
         function showPartyDeadModal(partyName) {
@@ -423,200 +542,6 @@
             }
         }
         
-        // ========== ВАЛИДАЦИЯ СОСТОЯНИЯ ИГРЫ ==========
-        function validateGameState() {
-            if (!factions || factions.length === 0) {
-                console.warn('Factions is empty, reinitializing...');
-                factions = getInitialFactions();
-                generateColors();
-                updateUI();
-                saveToServer();
-                return false;
-            }
-            
-            if (currentPlayer) {
-                const pf = factions.find(f => f.id === currentPlayer.party_id);
-                if (!pf || pf.isDead) {
-                    console.warn('Player party not found or dead, clearing currentPlayer');
-                    currentPlayer = null;
-                    localStorage.removeItem('duma_player_id');
-                    updateUI();
-                }
-            }
-            
-            return true;
-        }
-        
-        // ========== ЧАТ ==========
-        async function ensureChatBin() {
-            let retryCount = 0;
-            const maxRetries = 3;
-            
-            while (retryCount < maxRetries) {
-                try {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}/latest`, { 
-                        headers: { 'X-Master-Key': API_KEY } 
-                    });
-                    
-                    if (res.status === 404) {
-                        const createRes = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}`, {
-                            method: 'PUT',
-                            headers: { 
-                                'Content-Type': 'application/json', 
-                                'X-Master-Key': API_KEY 
-                            },
-                            body: JSON.stringify({ chat: [] })
-                        });
-                        return createRes.ok;
-                    } else if (res.ok) {
-                        return true;
-                    }
-                    throw new Error(`HTTP ${res.status}`);
-                } catch(e) { 
-                    console.error('Ensure chat bin error:', e);
-                    retryCount++;
-                    if (retryCount < maxRetries) {
-                        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                    }
-                }
-            }
-            return false;
-        }
-        
-        async function loadChat() {
-            try {
-                const binExists = await ensureChatBin();
-                if (!binExists) return;
-                
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}/latest`, { 
-                    headers: { 'X-Master-Key': API_KEY } 
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.record?.chat) {
-                        const container = document.getElementById('chatMessages');
-                        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-                        
-                        container.innerHTML = data.record.chat.slice(0, 100).map(m => 
-                            `<div class="chat-message"><strong>${escapeHtml(m.player)}</strong> <small>${m.time}</small><br>${escapeHtml(m.message)}</div>`
-                        ).join('');
-                        
-                        if (wasAtBottom) {
-                            container.scrollTop = container.scrollHeight;
-                        }
-                    }
-                }
-            } catch(e) { 
-                console.error('Chat load error:', e);
-            }
-        }
-        
-        async function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            if (!currentPlayer) {
-                alert("Вы не можете отправить сообщение: нет партии!");
-                return;
-            }
-            
-            const now = Date.now();
-            if (lastChatSend && now - lastChatSend < 2000) {
-                alert("Пожалуйста, подождите перед отправкой следующего сообщения.");
-                return;
-            }
-            lastChatSend = now;
-            
-            const sendBtn = document.getElementById('sendChatBtn');
-            const indicator = document.getElementById('sendingIndicator');
-            
-            setButtonLoading(sendBtn, true);
-            if (indicator) indicator.style.display = 'inline-block';
-            
-            let retryCount = 0;
-            const maxRetries = 3;
-            
-            const trySend = async () => {
-                try {
-                    const binExists = await ensureChatBin();
-                    if (!binExists) throw new Error('Chat bin not available');
-                    
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}/latest`, { 
-                        headers: { 'X-Master-Key': API_KEY } 
-                    });
-                    
-                    let chat = [];
-                    if (res.ok) {
-                        const data = await res.json();
-                        chat = data.record?.chat || [];
-                    } else {
-                        throw new Error(`Fetch failed: ${res.status}`);
-                    }
-                    
-                    const newMsg = { 
-                        player: currentPlayer.name, 
-                        message: text.substring(0, 200), 
-                        time: new Date().toLocaleTimeString() 
-                    };
-                    chat.unshift(newMsg);
-                    chat = chat.slice(0, 100);
-                    
-                    const saveRes = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Content-Type': 'application/json', 
-                            'X-Master-Key': API_KEY 
-                        },
-                        body: JSON.stringify({ chat: chat })
-                    });
-                    
-                    if (saveRes.ok) {
-                        input.value = '';
-                        await loadChat();
-                        return true;
-                    } else {
-                        throw new Error(`Save failed: ${saveRes.status}`);
-                    }
-                } catch(e) { 
-                    console.error('Chat send error:', e);
-                    if (retryCount < maxRetries) {
-                        retryCount++;
-                        setTimeout(trySend, 1000 * retryCount);
-                    } else {
-                        alert('Ошибка отправки сообщения. Проверьте подключение к интернету.');
-                    }
-                    return false;
-                }
-            };
-            
-            await trySend();
-            
-            setButtonLoading(sendBtn, false);
-            if (indicator) indicator.style.display = 'none';
-        }
-        
-        async function clearChat() {
-            try {
-                const binExists = await ensureChatBin();
-                if (!binExists) return;
-                
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CHAT_BIN_ID}`, {
-                    method: 'PUT',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-Master-Key': API_KEY 
-                    },
-                    body: JSON.stringify({ chat: [] })
-                });
-                
-                if (res.ok) await loadChat();
-            } catch(e) { 
-                console.error('Clear chat error:', e);
-            }
-        }
-        
         // ========== АВТОСОХРАНЕНИЕ ==========
         function startAutoSave() {
             if (autoSaveInterval) clearInterval(autoSaveInterval);
@@ -624,7 +549,7 @@
                 if (gameRunning && currentPlayer && factions && factions.length > 0) {
                     await saveToServer();
                 }
-            }, 30000);
+            }, 60000);
         }
         
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -649,13 +574,8 @@
         
         // ========== ИНИЦИАЛИЗАЦИЯ ДАННЫХ ==========
         function getInitialFactions() {
-            return [
-                { id: 1, name: "Единая Россия", color: "#3366cc", ideology: "Консерватизм", seats: 314, rating: 42, isBot: true, votedOnLaw: null, money: 50000, isDead: false },
-                { id: 2, name: "КПРФ", color: "#cc3333", ideology: "Социализм", seats: 56, rating: 20, isBot: true, votedOnLaw: null, money: 30000, isDead: false },
-                { id: 3, name: "Справедливая Россия", color: "#33cc66", ideology: "Социал-демократия", seats: 28, rating: 16, isBot: true, votedOnLaw: null, money: 25000, isDead: false },
-                { id: 4, name: "ЛДПР", color: "#33cc33", ideology: "Национализм", seats: 22, rating: 14, isBot: true, votedOnLaw: null, money: 22000, isDead: false },
-                { id: 5, name: "Новые люди", color: "#ffaa44", ideology: "Либерализм", seats: 15, rating: 12, isBot: true, votedOnLaw: null, money: 18000, isDead: false }
-            ];
+            // Возвращаем копию начальных ботов
+            return INITIAL_BOT_FACTIONS.map(bot => ({ ...bot }));
         }
         
         function getInitialNews() {
@@ -703,7 +623,8 @@
                     factions, laws, news, lawsHistory, events, economyHealth, crisisLevel, 
                     rulingPartyId, nextElectionTime: nextElectionTime ? new Date(nextElectionTime).toISOString() : null, 
                     electionActive, fixedSeatColors, lawsBlockedUntil, lastReformTime, nextId, 
-                    pendingProposals: filteredProposals, gameVersion: gameVersion + 1, achievements 
+                    pendingProposals: filteredProposals, gameVersion: gameVersion + 1, achievements,
+                    lastUpdate: now
                 };
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, { 
                     method: 'PUT', 
@@ -740,7 +661,8 @@
             const state = { 
                 factions, laws, news, lawsHistory, events, economyHealth, crisisLevel, 
                 rulingPartyId, nextElectionTime, electionActive, fixedSeatColors, 
-                lawsBlockedUntil, lastReformTime, nextId, pendingProposals, gameVersion, achievements 
+                lawsBlockedUntil, lastReformTime, nextId, pendingProposals, gameVersion, achievements,
+                lastUpdate: Date.now()
             };
             localStorage.setItem('duma_backup', JSON.stringify(state));
             return true;
@@ -758,7 +680,6 @@
                 });
                 
                 if (res.status === 404) { 
-                    console.log('Бин не найден, создаём новую игру...');
                     await initNewGame(); 
                     if (statusEl) {
                         statusEl.classList.remove('syncing'); 
@@ -773,61 +694,65 @@
                 }
                 
                 const data = await res.json(); 
-                const state = data.record;
+                const serverState = data.record;
                 
-                if (state && state.factions) {
-                    if (state.gameVersion > gameVersion) {
-                        const previousPlayerId = currentPlayer ? currentPlayer.party_id : null;
-                        
-                        factions = state.factions; 
-                        laws = state.laws || []; 
-                        news = state.news || []; 
-                        lawsHistory = state.lawsHistory || []; 
-                        events = state.events || [];
-                        economyHealth = state.economyHealth ?? 70; 
-                        crisisLevel = state.crisisLevel ?? 30; 
-                        rulingPartyId = state.rulingPartyId ?? 1;
-                        nextElectionTime = state.nextElectionTime ? new Date(state.nextElectionTime).getTime() : Date.now() + ELECTION_INTERVAL;
-                        electionActive = state.electionActive ?? false; 
-                        fixedSeatColors = state.fixedSeatColors || []; 
-                        lawsBlockedUntil = state.lawsBlockedUntil || 0;
-                        lastReformTime = state.lastReformTime || 0; 
-                        nextId = state.nextId || 100;
-                        const now = Date.now(); 
-                        pendingProposals = (state.pendingProposals || []).filter(p => now - p.timestamp < 300000);
-                        gameVersion = state.gameVersion; 
-                        achievements = state.achievements || [];
-                        
-                        if (previousPlayerId) { 
-                            const pf = factions.find(f => f.id === previousPlayerId); 
-                            if (pf && !pf.isDead) { 
-                                currentPlayer = {
-                                    party_id: pf.id,
-                                    name: pf.name,
-                                    money: pf.money,
-                                    rating: pf.rating,
-                                    ideology: pf.ideology,
-                                    votedOnLaw: pf.votedOnLaw !== undefined ? pf.votedOnLaw : null
-                                };
-                                localStorage.setItem('duma_player_id', currentPlayer.party_id);
-                            } else { 
-                                currentPlayer = null; 
-                                localStorage.removeItem('duma_player_id'); 
-                            } 
-                        }
-                        
-                        if (currentProposal && !pendingProposals.find(p => p.id === currentProposal.id)) { 
-                            currentProposal = null; 
-                            closeModal('proposalModal'); 
-                        }
-                        
-                        generateColors(); 
-                        updateUI(); 
-                        renderLaws(); 
-                        renderLawsHistory(); 
-                        updateNews(); 
-                        renderEventsList();
+                if (serverState && serverState.factions) {
+                    // Загружаем данные с сервера
+                    factions = serverState.factions; 
+                    laws = serverState.laws || []; 
+                    news = serverState.news || []; 
+                    lawsHistory = serverState.lawsHistory || []; 
+                    events = serverState.events || [];
+                    economyHealth = serverState.economyHealth ?? 70; 
+                    crisisLevel = serverState.crisisLevel ?? 30; 
+                    rulingPartyId = serverState.rulingPartyId ?? 1;
+                    nextElectionTime = serverState.nextElectionTime ? new Date(serverState.nextElectionTime).getTime() : Date.now() + ELECTION_INTERVAL;
+                    electionActive = serverState.electionActive ?? false; 
+                    fixedSeatColors = serverState.fixedSeatColors || []; 
+                    lawsBlockedUntil = serverState.lawsBlockedUntil || 0;
+                    lastReformTime = serverState.lastReformTime || 0; 
+                    nextId = serverState.nextId || 100;
+                    const now = Date.now(); 
+                    pendingProposals = (serverState.pendingProposals || []).filter(p => now - p.timestamp < 300000);
+                    gameVersion = serverState.gameVersion; 
+                    achievements = serverState.achievements || [];
+                    lastSyncTime = serverState.lastUpdate || now;
+                    
+                    // ВАЖНО: Восстанавливаем ботов, если они пропали
+                    ensureBotsExist();
+                    
+                    // Обновляем currentPlayer
+                    if (currentPlayer) { 
+                        const pf = factions.find(f => f.id === currentPlayer.party_id); 
+                        if (pf && !pf.isDead) { 
+                            currentPlayer = {
+                                party_id: pf.id,
+                                name: pf.name,
+                                money: pf.money,
+                                rating: pf.rating,
+                                ideology: pf.ideology,
+                                votedOnLaw: pf.votedOnLaw !== undefined ? pf.votedOnLaw : null
+                            };
+                            localStorage.setItem('duma_player_id', currentPlayer.party_id);
+                        } else { 
+                            currentPlayer = null; 
+                            localStorage.removeItem('duma_player_id'); 
+                        } 
                     }
+                    
+                    if (currentProposal && !pendingProposals.find(p => p.id === currentProposal.id)) { 
+                        currentProposal = null; 
+                        closeModal('proposalModal'); 
+                    }
+                    
+                    generateColors(); 
+                    updateUI(); 
+                    renderLaws(); 
+                    renderLawsHistory(); 
+                    updateNews(); 
+                    renderEventsList();
+                    renderAchievements();
+                    updateOnlinePlayers();
                     
                     if (statusEl) {
                         statusEl.classList.remove('syncing'); 
@@ -871,6 +796,10 @@
                     pendingProposals = state.pendingProposals || []; 
                     gameVersion = state.gameVersion || 0;
                     achievements = state.achievements || [];
+                    
+                    // Восстанавливаем ботов
+                    ensureBotsExist();
+                    
                     if (currentPlayer) { 
                         const pf = factions.find(f => f.id === currentPlayer.party_id); 
                         if (pf && !pf.isDead) {
@@ -886,6 +815,8 @@
                     renderLawsHistory(); 
                     updateNews(); 
                     renderEventsList();
+                    renderAchievements();
+                    updateOnlinePlayers();
                     isOnline = false; 
                     const statusEl = document.getElementById('syncStatus');
                     if (statusEl) {
@@ -912,20 +843,9 @@
             electionActive = false; 
             generateColors(); 
             achievements = [];
+            lastSyncTime = Date.now();
             await saveToServer();
-        }
-        
-        // ========== НОВОСТИ ==========
-        async function addNews(msg) { 
-            news.unshift({ id: Date.now(), message: msg, date: new Date().toLocaleTimeString() }); 
-            if (news.length > 50) news.pop(); 
-            updateNews(); 
-            await saveToServer(); 
-        }
-        
-        function updateNews() { 
-            let feed = document.getElementById('newsFeed'); 
-            if (feed) feed.innerHTML = news.slice(0, 20).map(n => `<div class="news-item"><div>📰 ${escapeHtml(n.message)}</div><div style="font-size:8px;color:#d4af37;">${n.date}</div></div>`).join(''); 
+            updateOnlinePlayers();
         }
         
         // ========== ОТРИСОВКА КАРТЫ ==========
@@ -1019,76 +939,93 @@
                 }
                 
                 pf.votedOnLaw = lawId;
-                const newsMessages = [];
                 
                 if (type === 'for') { 
                     law.votesFor += pf.seats; 
-                    newsMessages.push(`🗳️ ${pf.name} (${pf.seats} мест) голосует ЗА`);
+                    await addNews(`🗳️ ${pf.name} (${pf.seats} мест) голосует ЗА`);
                 } else if (type === 'against') { 
                     law.votesAgainst += pf.seats; 
-                    newsMessages.push(`🗳️ ${pf.name} (${pf.seats} мест) голосует ПРОТИВ`);
+                    await addNews(`🗳️ ${pf.name} (${pf.seats} мест) голосует ПРОТИВ`);
                 } else { 
                     law.votesAbstain += pf.seats; 
-                    newsMessages.push(`🗳️ ${pf.name} (${pf.seats} мест) ВОЗДЕРЖАЛСЯ`);
+                    await addNews(`🗳️ ${pf.name} (${pf.seats} мест) ВОЗДЕРЖАЛСЯ`);
                 }
                 
-                const botVotes = [];
-                for (let f of factions) {
-                    if (f.isBot && !f.isDead && f.votedOnLaw !== lawId && f.seats > 0) {
-                        f.votedOnLaw = lawId;
-                        let r = Math.random();
-                        let voteText = '';
-                        if (r < 0.5) {
-                            law.votesFor += f.seats;
-                            voteText = 'ЗА';
-                        } else if (r < 0.8) {
-                            law.votesAgainst += f.seats;
-                            voteText = 'ПРОТИВ';
-                        } else {
-                            law.votesAbstain += f.seats;
-                            voteText = 'ВОЗДЕРЖАЛСЯ';
-                        }
-                        botVotes.push(`🗳️ ${f.name} (${f.seats} мест) голосует ${voteText}`);
-                    }
-                }
+                await autoBotVoting();
                 
-                newsMessages.push(...botVotes);
-                for (let msg of newsMessages) {
-                    news.unshift({ id: Date.now(), message: msg, date: new Date().toLocaleTimeString() });
-                }
-                if (news.length > 50) news.pop();
-                updateNews();
-                
-                let shouldFinalize = false;
-                let finalStatus = null;
-                
-                if (law.votesFor >= law.neededVotes) {
-                    shouldFinalize = true;
-                    finalStatus = 'passed';
-                } else if (law.votesAgainst >= law.neededVotes) {
-                    shouldFinalize = true;
-                    finalStatus = 'rejected';
-                } else {
-                    const votedCount = factions.filter(f => f.votedOnLaw === lawId).length;
-                    const activeFactions = factions.filter(f => !f.isDead && f.seats > 0).length;
-                    if (votedCount === activeFactions) {
-                        shouldFinalize = true;
-                        finalStatus = law.votesFor > law.votesAgainst ? 'passed' : 'rejected';
-                    }
-                }
-                
-                if (shouldFinalize && !lawFinalizing.has(lawId)) {
-                    lawFinalizing.add(lawId);
-                    await finalizeLaw(law, finalStatus);
-                    lawFinalizing.delete(lawId);
-                }
-                
-                await saveToServer();
                 renderLaws();
                 updateUI();
                 
             } finally {
                 votingLock = false;
+            }
+        }
+        
+        // ========== АВТОМАТИЧЕСКОЕ ГОЛОСОВАНИЕ БОТОВ ==========
+        async function autoBotVoting() {
+            let changed = false;
+            const botVotesMessages = [];
+            
+            for (let law of laws) {
+                if (law.status !== 'pending') continue;
+                
+                let allPlayersVoted = true;
+                for (let f of factions) {
+                    if (!f.isBot && !f.isDead && f.seats > 0 && f.votedOnLaw !== law.id) {
+                        allPlayersVoted = false;
+                        break;
+                    }
+                }
+                
+                if (allPlayersVoted) {
+                    for (let f of factions) {
+                        if (f.isBot && !f.isDead && f.votedOnLaw !== law.id && f.seats > 0) {
+                            f.votedOnLaw = law.id;
+                            let r = Math.random();
+                            let voteText = '';
+                            if (r < 0.5) {
+                                law.votesFor += f.seats;
+                                voteText = 'ЗА';
+                            } else if (r < 0.8) {
+                                law.votesAgainst += f.seats;
+                                voteText = 'ПРОТИВ';
+                            } else {
+                                law.votesAbstain += f.seats;
+                                voteText = 'ВОЗДЕРЖАЛСЯ';
+                            }
+                            botVotesMessages.push(`🗳️ ${f.name} (${f.seats} мест) голосует ${voteText}`);
+                            changed = true;
+                        }
+                    }
+                    
+                    if (botVotesMessages.length > 0) {
+                        for (let msg of botVotesMessages) {
+                            addNewsLocal(msg);
+                        }
+                    }
+                    
+                    if (law.votesFor >= law.neededVotes) {
+                        await finalizeLaw(law, 'passed');
+                        changed = true;
+                    } else if (law.votesAgainst >= law.neededVotes) {
+                        await finalizeLaw(law, 'rejected');
+                        changed = true;
+                    } else {
+                        const votedCount = factions.filter(f => f.votedOnLaw === law.id).length;
+                        const activeFactions = factions.filter(f => !f.isDead && f.seats > 0).length;
+                        if (votedCount === activeFactions) {
+                            await finalizeLaw(law, law.votesFor > law.votesAgainst ? 'passed' : 'rejected');
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            
+            if (changed) {
+                await saveToServer();
+                renderLaws();
+                updateUI();
+                checkAchievements();
             }
         }
         
@@ -1113,15 +1050,15 @@
             } else { 
                 resultMsg = `❌ ЗАКОН ОТКЛОНЁН! "${law.name}" (ЗА: ${law.votesFor}, ПРОТИВ: ${law.votesAgainst})`; 
             }
-            news.unshift({ id: Date.now(), message: resultMsg, date: new Date().toLocaleTimeString() }); 
-            if (news.length > 50) news.pop(); 
-            updateNews();
+            addNewsLocal(resultMsg);
+            
             lawsHistory.unshift({ 
                 id: Date.now(), name: law.name, description: law.description, 
                 author: law.author, status: status, date: new Date().toLocaleTimeString(),
                 votesFor: law.votesFor, votesAgainst: law.votesAgainst
             });
             if (lawsHistory.length > 50) lawsHistory.pop();
+            
             factions.forEach(f => { if (f.votedOnLaw === law.id) f.votedOnLaw = null; });
             if (currentPlayer) { 
                 const pf = factions.find(f => f.id === currentPlayer.party_id); 
@@ -1130,6 +1067,7 @@
             laws = laws.filter(l => l.id !== law.id);
             renderLawsHistory(); 
             await saveToServer();
+            checkAchievements();
         }
         
         function renderLawsHistory() { 
@@ -1151,7 +1089,13 @@
             let name = document.getElementById('lawName').value.trim(); 
             let desc = document.getElementById('lawDesc').value.trim(); 
             let effect = document.getElementById('lawEffect').value; 
+            
             if (!name || name.length < 3) { alert("Название должно содержать минимум 3 символа!"); return; } 
+            if (name.length > 50) { alert("Название не может быть длиннее 50 символов!"); return; }
+            if (laws.some(l => l.name.toLowerCase() === name.toLowerCase())) { 
+                alert("Закон с таким названием уже существует!"); 
+                return; 
+            }
             if (currentPlayer.money < 5000) { alert("Нужно 5000₽!"); return; } 
             
             const proposeBtn = document.getElementById('proposeLawBtn');
@@ -1211,6 +1155,7 @@
             updateUI(); 
             await saveToServer(); 
             checkPartyDeaths(); 
+            checkAchievements();
         }
         
         // ========== САБОТАЖ ==========
@@ -1265,11 +1210,11 @@
             rulingPartyId = winner.id; 
             generateColors(); 
             await addNews(`🏆 ВЫБОРЫ! Побеждает "${winner.name}" с ${winner.seats} местами!`); 
-            await clearChat(); 
             await saveToServer(); 
             renderMap(); 
             updateUI(); 
             checkRulingParty(); 
+            checkAchievements();
         }
         
         function scheduleElection() { 
@@ -1291,7 +1236,7 @@
             }, 1000); 
         }
         
-        // ========== БОТЫ ==========
+        // ========== БОТЫ - АКТИВНЫЕ ДЕЙСТВИЯ ==========
         async function botAction() { 
             if (!gameRunning || electionActive) return; 
             let changed = false; 
@@ -1299,11 +1244,13 @@
             const lawsToAdd = []; 
             const changes = []; 
             const lawsBlocked = Date.now() < lawsBlockedUntil; 
+            
             for (let f of factions) { 
-                if (f.isBot && !f.isDead && f.seats > 0 && Math.random() < 0.3) { 
+                if (f.isBot && !f.isDead && f.seats > 0 && Math.random() < 0.35) { 
                     let a = Math.random(); 
-                    if (!lawsBlocked && a < 0.4) { 
-                        let names = ["О защите прав граждан", "О развитии экономики", "О социальной поддержке", "О цифровизации"]; 
+                    
+                    if (!lawsBlocked && a < 0.4 && laws.filter(l => l.status === 'pending').length < 8) { 
+                        let names = ["О защите прав граждан", "О развитии экономики", "О социальной поддержке", "О цифровизации", "Об образовании", "О здравоохранении", "О пенсионной реформе"]; 
                         let effects = ["economy_up", "social", "military", "corruption"]; 
                         lawsToAdd.push({ 
                             id: Date.now() + Math.random(), 
@@ -1315,37 +1262,46 @@
                         }); 
                         botNews.push(`📜 Фракция "${f.name}" внесла законопроект`); 
                         changed = true; 
-                    } else if (a < 0.7 && f.id !== rulingPartyId) { 
+                    } 
+                    else if (a < 0.75 && f.id !== rulingPartyId) { 
                         let r = factions.find(r => r.id === rulingPartyId); 
                         if (r && !r.isDead) { 
-                            changes.push({ faction: r, change: -1.5 }); 
-                            botNews.push(`💬 Фракция "${f.name}" раскритиковала правящую партию! Рейтинг власти -1.5%`); 
+                            changes.push({ faction: r, change: -2 }); 
+                            botNews.push(`💬 Фракция "${f.name}" раскритиковала правящую партию! Рейтинг власти -2%`); 
                             changed = true; 
                         } 
-                    } else if (a < 0.85 && f.money >= 3000) { 
+                    } 
+                    else if (a < 0.9 && f.money >= 3000) { 
                         let city = cities[Math.floor(Math.random() * cities.length)]; 
                         let gain = Math.floor(Math.random() * 3) + 2; 
                         changes.push({ faction: f, ratingGain: gain, cost: 3000 }); 
                         botNews.push(`🎪 Фракция "${f.name}" провела митинг в ${city}! Рейтинг +${gain}%`); 
                         changed = true; 
-                    } 
+                    }
+                    else if (a < 0.96) {
+                        changes.push({ faction: f, ratingGain: 1, cost: 0 });
+                        botNews.push(`📊 Фракция "${f.name}" провела успешную PR-кампанию! Рейтинг +1%`);
+                        changed = true;
+                    }
                 } 
             } 
+            
             for (let law of lawsToAdd) laws.push(law); 
             for (let change of changes) { 
-                if (change.change) change.faction.rating = clamp(change.faction.rating + change.change, 0, 100); 
-                else { 
-                    change.faction.rating = clamp(change.faction.rating + change.ratingGain, 0, 100); 
-                    change.faction.money -= change.cost; 
-                } 
+                if (change.change) {
+                    change.faction.rating = clamp(change.faction.rating + change.change, 0, 100);
+                } else if (change.ratingGain) {
+                    change.faction.rating = clamp(change.faction.rating + change.ratingGain, 0, 100);
+                    if (change.cost) change.faction.money -= change.cost;
+                }
             } 
+            
             if (botNews.length > 0) { 
                 for (let msg of botNews) { 
-                    news.unshift({ id: Date.now(), message: msg, date: new Date().toLocaleTimeString() }); 
+                    addNewsLocal(msg);
                 } 
-                if (news.length > 50) news.pop(); 
-                updateNews(); 
             } 
+            
             if (changed) { 
                 renderLaws(); 
                 updateUI(); 
@@ -1409,16 +1365,37 @@
                 
                 pendingProposals = [];
                 
-                setTimeout(async () => {
-                    await loadFromServer();
-                    updateUI();
-                }, 1000);
+                const leaveBtn = document.getElementById('leavePartyButton');
+                if (leaveBtn) leaveBtn.style.display = 'block';
+                
+                checkAchievements();
+                updateOnlinePlayers();
                 
             } catch(e) {
                 console.error('Error creating party:', e);
                 alert('Ошибка при создании партии. Попробуйте ещё раз.');
             } finally {
                 setButtonLoading(createBtn, false);
+            }
+        }
+        
+        async function leaveParty() {
+            if (!currentPlayer) return;
+            if (confirm(`Вы уверены, что хотите покинуть партию "${currentPlayer.name}"?`)) {
+                const pf = factions.find(f => f.id === currentPlayer.party_id);
+                if (pf && !pf.isDead) {
+                    pf.isDead = true;
+                    pf.seats = 0;
+                    await addNews(`💀 ПАРТИЯ РАСПАЛАСЬ! "${pf.name}" распалась после ухода лидера!`);
+                }
+                currentPlayer = null;
+                localStorage.removeItem('duma_player_id');
+                updateUI();
+                await saveToServer();
+                
+                const leaveBtn = document.getElementById('leavePartyButton');
+                if (leaveBtn) leaveBtn.style.display = 'none';
+                updateOnlinePlayers();
             }
         }
         
@@ -1489,7 +1466,8 @@
                 let candidates = factions.filter(f => f.id !== rulingPartyId && f.isBot === true && !f.isDead); 
                 if (candidates.length) { 
                     let target = candidates[Math.floor(Math.random() * candidates.length)]; 
-                    factions = factions.filter(f => f.id !== target.id); 
+                    target.isDead = true;
+                    target.seats = 0;
                     await addNews(`💀 ФРАКЦИЯ "${target.name}" ЗАПРЕЩЕНА!`); 
                     generateColors(); 
                     renderMap(); 
@@ -1504,20 +1482,44 @@
         
         // ========== СДЕЛКИ ==========
         async function sendProposal(targetId) { 
-            if (!currentPlayer) { alert("Создайте партию!"); return; } 
+            if (!currentPlayer) { 
+                alert("Создайте партию!"); 
+                return; 
+            }
+            
             const target = factions.find(f => f.id === targetId); 
-            if (!target || target.isDead) return; 
-            if (target.isBot) { alert("Нельзя заключать сделки с фракциями-ботами!"); return; } 
-            if (currentPlayer.party_id === targetId) { alert("Нельзя заключить сделку со своей партией!"); return; } 
-            if (currentPlayer.money < 5000) { alert("Недостаточно средств! Нужно 5000₽"); return; } 
-            if (pendingProposals.filter(p => p.fromId === currentPlayer.party_id).length >= MAX_ACTIVE_PROPOSALS) { 
+            if (!target || target.isDead) {
+                alert("Фракция не найдена!");
+                return;
+            }
+            
+            if (target.isBot) { 
+                alert("Нельзя заключать сделки с фракциями-ботами!"); 
+                return; 
+            }
+            
+            if (currentPlayer.party_id === targetId) { 
+                alert("Нельзя заключить сделку со своей партией!"); 
+                return; 
+            }
+            
+            if (currentPlayer.money < 5000) { 
+                alert("Недостаточно средств! Нужно 5000₽"); 
+                return; 
+            }
+            
+            const userActiveProposals = pendingProposals.filter(p => p.fromId === currentPlayer.party_id);
+            if (userActiveProposals.length >= MAX_ACTIVE_PROPOSALS) { 
                 alert(`У вас уже есть ${MAX_ACTIVE_PROPOSALS} активных предложений.`); 
                 return; 
-            } 
-            if (pendingProposals.some(p => p.fromId === currentPlayer.party_id && p.targetId === targetId)) { 
+            }
+            
+            const existingToTarget = pendingProposals.some(p => p.fromId === currentPlayer.party_id && p.targetId === targetId);
+            if (existingToTarget) { 
                 alert("Вы уже отправили предложение этой фракции."); 
                 return; 
-            } 
+            }
+            
             const proposal = { 
                 id: Date.now(), 
                 fromId: currentPlayer.party_id, 
@@ -1530,20 +1532,32 @@
                 ratingLoss: 4, 
                 timestamp: Date.now() 
             }; 
+            
             pendingProposals.push(proposal); 
             await addNews(`📩 Фракция "${currentPlayer.name}" предложила сделку фракции "${target.name}"`); 
             await saveToServer(); 
             updateUI(); 
+            alert(`Предложение отправлено фракции "${target.name}". Ожидайте ответа.`);
         }
         
         function checkProposals() { 
             if (!currentPlayer) return; 
+            
             const now = Date.now(); 
-            pendingProposals = pendingProposals.filter(p => now - p.timestamp < 300000); 
+            pendingProposals = pendingProposals.filter(p => now - p.timestamp < 300000);
+            
             const proposal = pendingProposals.find(p => p.targetId === currentPlayer.party_id); 
+            
             if (proposal && !currentProposal) { 
                 currentProposal = proposal; 
-                document.getElementById('proposalContent').innerHTML = `<p><strong>${escapeHtml(proposal.fromName)}</strong> предлагает:</p><p>📊 Купить ${proposal.seats} мандата за ${proposal.amount}₽</p><p>⚠️ Вы потеряете ${proposal.ratingLoss}% рейтинга</p><p>💰 Вы получите ${proposal.amount}₽</p><p><small>⏰ Предложение действительно 5 минут</small></p>`; 
+                const contentDiv = document.getElementById('proposalContent'); 
+                if (contentDiv) {
+                    contentDiv.innerHTML = `<p><strong>${escapeHtml(proposal.fromName)}</strong> предлагает:</p>
+                        <p>📊 Купить ${proposal.seats} мандата за ${proposal.amount}₽</p>
+                        <p>⚠️ Вы потеряете ${proposal.ratingLoss}% рейтинга</p>
+                        <p>💰 Вы получите ${proposal.amount}₽</p>
+                        <p><small>⏰ Предложение действительно 5 минут</small></p>`; 
+                }
                 document.getElementById('proposalModal').style.display = 'flex'; 
             } else if (!proposal && currentProposal) { 
                 currentProposal = null; 
@@ -1553,31 +1567,39 @@
         
         async function acceptProposal() { 
             if (!currentProposal) return; 
+            
             const from = factions.find(f => f.id === currentProposal.fromId); 
             const target = factions.find(f => f.id === currentProposal.targetId); 
+            
             if (!from || !target || from.isDead || target.isDead) { 
                 closeModal('proposalModal'); 
                 currentProposal = null; 
+                alert("Ошибка: одна из фракций больше не существует!");
                 return; 
             } 
+            
             if (target.seats < currentProposal.seats) { 
-                alert("У фракции недостаточно мандатов!"); 
+                alert("У вашей фракции недостаточно мандатов!"); 
                 closeModal('proposalModal'); 
                 currentProposal = null; 
                 return; 
             } 
+            
             if (from.money < currentProposal.amount) { 
                 alert("У предложившей стороны недостаточно средств!"); 
                 closeModal('proposalModal'); 
                 currentProposal = null; 
                 return; 
             } 
+            
             target.seats -= currentProposal.seats; 
             from.seats += currentProposal.seats; 
             from.money -= currentProposal.amount; 
             target.money += currentProposal.amount; 
             from.rating = clamp(from.rating - currentProposal.ratingLoss, 0, 100); 
+            
             await addNews(`🤝 СДЕЛКА! "${from.name}" купил ${currentProposal.seats} мандата у "${target.name}" за ${currentProposal.amount}₽.`); 
+            
             if (from.id === currentPlayer?.party_id) { 
                 currentPlayer.money = from.money; 
                 currentPlayer.rating = from.rating; 
@@ -1586,6 +1608,7 @@
                 currentPlayer.money = target.money; 
                 currentPlayer.rating = target.rating; 
             } 
+            
             pendingProposals = pendingProposals.filter(p => p.id !== currentProposal.id); 
             await saveToServer(); 
             generateColors(); 
@@ -1594,6 +1617,8 @@
             closeModal('proposalModal'); 
             currentProposal = null; 
             checkPartyDeaths(); 
+            
+            alert("Сделка успешно завершена!");
         }
         
         async function rejectProposal() { 
@@ -1603,14 +1628,13 @@
             await saveToServer(); 
             closeModal('proposalModal'); 
             currentProposal = null; 
+            alert("Предложение отклонено.");
         }
         
         // ========== ИГРОВОЙ ЦИКЛ ==========
         function gameTick() { 
             if (!gameRunning || electionActive) return; 
             updateLawBlockIndicator(); 
-            
-            validateGameState();
             
             if (currentPlayer) { 
                 let pf = factions.find(f => f.id === currentPlayer.party_id); 
@@ -1619,7 +1643,8 @@
                     currentPlayer.money += income; 
                     pf.money = currentPlayer.money; 
                 } 
-            } 
+            }
+            
             updateUI(); 
             checkPartyDeaths(); 
             checkRulingParty(); 
@@ -1633,6 +1658,7 @@
             let crisisEl = document.getElementById('crisisLevel'); 
             let economyEl = document.getElementById('economyHealth'); 
             let createBtn = document.getElementById('createPartyButton'); 
+            let leaveBtn = document.getElementById('leavePartyButton');
             
             if (currentPlayer) { 
                 let pf = factions.find(f => f.id === currentPlayer.party_id); 
@@ -1643,12 +1669,14 @@
                 if (nameEl) nameEl.innerHTML = currentPlayer ? `${escapeHtml(currentPlayer.name)} (${currentPlayer.ideology || '?'})` : 'Нет партии'; 
                 if (moneyEl) moneyEl.innerHTML = currentPlayer ? Math.floor(currentPlayer.money) : '0'; 
                 if (ratingEl) ratingEl.innerHTML = currentPlayer ? Math.floor(currentPlayer.rating) : '0'; 
-                if (createBtn) createBtn.style.display = currentPlayer ? 'none' : 'block'; 
+                if (createBtn) createBtn.style.display = currentPlayer ? 'none' : 'block';
+                if (leaveBtn) leaveBtn.style.display = currentPlayer ? 'block' : 'none';
             } else { 
                 if (nameEl) nameEl.innerHTML = 'Нет партии'; 
                 if (moneyEl) moneyEl.innerHTML = '0'; 
                 if (ratingEl) ratingEl.innerHTML = '0'; 
-                if (createBtn) createBtn.style.display = 'block'; 
+                if (createBtn) createBtn.style.display = 'block';
+                if (leaveBtn) leaveBtn.style.display = 'none';
             } 
             if (crisisEl) crisisEl.innerHTML = Math.floor(crisisLevel); 
             if (economyEl) economyEl.innerHTML = Math.floor(economyHealth); 
@@ -1664,8 +1692,12 @@
             } 
             let grid = document.getElementById('factionsGrid'); 
             if (grid && factions && factions.length > 0) { 
-                factions.sort((a,b) => b.seats - a.seats); 
-                grid.innerHTML = factions.filter(f => !f.isDead).map(f => `<div class="faction-card ${currentPlayer && f.id === currentPlayer.party_id ? 'active' : ''}" style="border-left-color: ${f.color}" data-id="${f.id}" data-name="${escapeHtml(f.name)}"><div><strong style="color:${f.color}">${escapeHtml(f.name)}</strong> ${f.id === rulingPartyId ? '👑' : ''} ${f.isBot ? '<span class="bot-badge">🤖 БОТ</span>' : '<span class="player-badge">👤 ИГРОК</span>'}</div><div class="faction-seats">🏛️ ${f.seats}</div><div class="progress-bar-slim"><div style="width:${(f.seats/TOTAL_SEATS)*100}%; height:100%; background:${f.color}"></div></div><div>⭐ ${Math.floor(f.rating)}%</div><div>💰 ${Math.floor(f.money || 0)}₽</div>${!f.isBot && currentPlayer && f.id !== currentPlayer.party_id ? `<button class="btn btn-primary proposal-btn" data-id="${f.id}" style="margin-top:5px; font-size:10px;">🤝 Предложить сделку</button>` : ''}</div>`).join(''); 
+                factions.sort((a,b) => {
+                    if (a.isBot && !b.isBot) return -1;
+                    if (!a.isBot && b.isBot) return 1;
+                    return b.seats - a.seats;
+                });
+                grid.innerHTML = factions.filter(f => !f.isDead).map(f => `<div class="faction-card ${currentPlayer && f.id === currentPlayer.party_id ? 'active' : ''}" style="border-left-color: ${f.color}" data-id="${f.id}" data-name="${escapeHtml(f.name)}"><div><strong style="color:${f.color}">${escapeHtml(f.name)}</strong> ${f.id === rulingPartyId ? '👑' : ''} ${f.isBot ? '<span class="bot-badge">🤖 БОТ</span>' : '<span class="player-badge">👤 ИГРОК</span>'}</div><div class="faction-seats">🏛️ ${f.seats}</div><div class="progress-bar-slim"><div style="width:${(f.seats/TOTAL_SEATS)*100}%; height:100%; background:${f.color}"></div></div><div>⭐ ${Math.floor(f.rating)}%</div><div>💰 ${Math.floor(f.money || 0)}₽</div>${!f.isBot && currentPlayer && f.id !== currentPlayer.party_id ? `<button class="btn btn-primary proposal-btn" data-id="${f.id}" style="margin-top:5px; font-size:10px; width:100%;">🤝 Предложить сделку</button>` : ''}</div>`).join(''); 
                 document.querySelectorAll('.proposal-btn').forEach(btn => { 
                     btn.removeEventListener('click', proposalHandler); 
                     btn.addEventListener('click', proposalHandler); 
@@ -1677,11 +1709,13 @@
             let alertDiv = document.getElementById('electionAlert'); 
             if (alertDiv) alertDiv.innerHTML = electionActive ? '<div class="election-banner">🗳️ ВЫБОРЫ! 60 сек.</div>' : ''; 
             renderMap(); 
+            updateOnlinePlayers();
         }
         
         function proposalHandler(e) { 
             e.stopPropagation(); 
-            sendProposal(parseInt(e.currentTarget.dataset.id)); 
+            const factionId = parseInt(e.currentTarget.dataset.id);
+            sendProposal(factionId); 
         }
         
         function clearAllIntervals() { 
@@ -1697,7 +1731,7 @@
         }
         
         function showHelp() { 
-            const helpContent = `<h3>📚 Правила игры</h3><p><strong>🎯 Цель:</strong> Получить большинство мест в Думе (226+).</p><br><p><strong>📜 Действия:</strong></p><ul><li><strong>Закон:</strong> Внесите законопроект (5000₽).</li><li><strong>Митинг:</strong> Повысьте рейтинг своей партии.</li><li><strong>Саботаж:</strong> Снизьте рейтинг правящей партии.</li><li><strong>Сделки:</strong> Покупайте мандаты у других игроков.</li></ul><br><p><strong>⚠️ Важно:</strong> При 0% рейтинга партия распадается! После выборов чат очищается.</p><p><strong>⚠️ Кризис:</strong> При уровне кризиса выше 60% рейтинг правящей партии постепенно снижается!</p>`; 
+            const helpContent = `<h3>📚 Правила игры</h3><p><strong>🎯 Цель:</strong> Получить большинство мест в Думе (226+).</p><br><p><strong>📜 Действия:</strong></p><ul><li><strong>Закон:</strong> Внесите законопроект (5000₽).</li><li><strong>Митинг:</strong> Повысьте рейтинг своей партии.</li><li><strong>Саботаж:</strong> Снизьте рейтинг правящей партии.</li><li><strong>Сделки:</strong> Покупайте мандаты у других игроков (кнопка "Предложить сделку" на карточке фракции).</li></ul><br><p><strong>⚠️ Важно:</strong> При 0% рейтинга партия распадается!</p><p><strong>⚠️ Кризис:</strong> При уровне кризиса выше 60% рейтинг правящей партии постепенно снижается!</p>`; 
             const modal = document.createElement('div'); 
             modal.className = 'modal'; 
             modal.style.display = 'flex'; 
@@ -1727,7 +1761,11 @@
                 btns[3]?.classList.add('active'); 
                 document.getElementById('eventsTab')?.classList.add('active'); 
                 renderEventsList(); 
-            } 
+            } else if (tab === 'achievements') {
+                btns[4]?.classList.add('active');
+                document.getElementById('achievementsTab')?.classList.add('active');
+                renderAchievements();
+            }
         }
         
         function showCreateModal() { 
@@ -1775,6 +1813,9 @@
             
             if (!factions || factions.length === 0) await initNewGame(); 
             
+            // Восстанавливаем ботов при любом запуске
+            ensureBotsExist();
+            
             let savedId = localStorage.getItem('duma_player_id'); 
             if (savedId) { 
                 let pf = factions.find(f => f.id == savedId); 
@@ -1798,7 +1839,8 @@
             updateNews(); 
             renderLawsHistory(); 
             renderEventsList(); 
-            await loadChat(); 
+            renderAchievements();
+            updateOnlinePlayers();
             
             clearAllIntervals();
             
@@ -1812,11 +1854,12 @@
                     renderLaws(); 
                     checkProposals(); 
                 } 
-            }, 8000); 
-            setInterval(async () => { await loadChat(); }, 3000); 
-            eventInterval = setInterval(() => { if (gameRunning) triggerRandomEvent(); }, 120000); 
+            }, SYNC_INTERVAL);
+            eventInterval = setInterval(() => { if (gameRunning) triggerRandomEvent(); }, 60000); 
             startAutoSave();
             startCrisisDamageTimer();
+            
+            checkProposals();
             
             updateLawBlockIndicator(); 
             if (lawsBlockedUntil > Date.now()) lawBlockInterval = setInterval(() => updateLawBlockIndicator(), 1000); 
@@ -1827,6 +1870,9 @@
                 closeModal('partyDeadModal'); 
                 showCreateModal(); 
             }); 
+            document.getElementById('leavePartyButton')?.addEventListener('click', leaveParty);
+            document.getElementById('acceptProposalBtn')?.addEventListener('click', acceptProposal);
+            document.getElementById('rejectProposalBtn')?.addEventListener('click', rejectProposal);
         }
         
         setTimeout(() => initGame(), 500);
@@ -1835,18 +1881,18 @@
         document.getElementById('lawBtn')?.addEventListener('click', showLawModal);
         document.getElementById('rallyBtn')?.addEventListener('click', showRallyModal);
         document.getElementById('sabotageBtn')?.addEventListener('click', sabotageRulingParty);
-        document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
-        document.getElementById('chatInput')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
         document.getElementById('createPartyConfirmBtn')?.addEventListener('click', createPlayerParty);
         document.getElementById('proposeLawBtn')?.addEventListener('click', proposeLaw);
         document.getElementById('organizeRallyBtn')?.addEventListener('click', organizeRally);
-        document.getElementById('acceptProposalBtn')?.addEventListener('click', acceptProposal);
-        document.getElementById('rejectProposalBtn')?.addEventListener('click', rejectProposal);
         document.querySelectorAll('[data-reform]').forEach(btn => { btn.addEventListener('click', () => executeReform(btn.dataset.reform)); });
         document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => switchTab(btn.dataset.tab)); });
         document.querySelectorAll('.close-modal-btn').forEach(btn => { btn.addEventListener('click', () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none')); });
+        
         window.showCreateModal = showCreateModal; 
         window.closeModal = closeModal;
+        window.sendProposal = sendProposal;
+        window.acceptProposal = acceptProposal;
+        window.rejectProposal = rejectProposal;
     </script>
 </body>
 </html>
